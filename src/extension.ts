@@ -11,7 +11,8 @@ import {
     SettingMonitor
 } from 'vscode-languageclient';
 
-const previewPath: string = resolve(__dirname, '../preview/index.html');
+const previewDir: string = resolve(__dirname, '../preview/');
+const previewPath: string = resolve(previewDir, 'index.html');
 const previewHtml: string = readFileSync(previewPath).toString();
 const template = bemhtml.compile();
 
@@ -55,22 +56,25 @@ const createLanguageClient = (context: vscode.ExtensionContext): LanguageClient 
     return client;
 };
 
-const setPreviewContent = (doc: vscode.TextDocument, context: vscode.ExtensionContext) => {
-    const panel = PANELS[doc.uri.path];
+const setPreviewContent = (document: vscode.TextDocument, context: vscode.ExtensionContext) => {
+    const panel = PANELS[document.uri.toString()];
 
     if (panel) {
-        const mediaPath = vscode.Uri.file(context.extensionPath).with({
+        const mediaPath = vscode.Uri.file(previewDir).with({
             scheme: "vscode-resource"
-        }).toString();
+        }).toString() + "/";//todo не нравится это добавление слеша, но без него не работает
 
         try {
-            const json = doc.getText();
+            const json = document.getText();
             const data = JSON.parse(json);
             const html = template.apply(data);
             panel.webview.html = previewHtml
                 .replace('{{content}}', html)
                 .replace('{{mediaPath}}', mediaPath);
-        } catch(e) {}
+            
+        } catch(e) {
+            console.error(e);
+        }
     }
 };
 
@@ -89,7 +93,7 @@ const initPreviewPanel = (document: vscode.TextDocument) => {
     PANELS[document.uri.toString()] = panel;
 
     const e = panel.onDidDispose(() => {
-        delete PANELS[document.uri.path];
+        delete PANELS[document.uri.toString()];
         e.dispose();
     });
 
