@@ -1,0 +1,24 @@
+{
+    "block": "form",
+    "content": [
+        {
+            "block": "form",
+            "elem": "footer",
+            "mix": [ { "block": "form", "elem": "item", "mods": { "space-v": "l", "space-h": "xl" } } ],
+            "content": [
+                {
+                    "block": "text",
+                    "mods": {
+                        "size": "xl"
+                    }
+                }
+            ]
+        },
+        {
+            "block": "input",
+            "mods": {
+                "size": "l"
+            }
+        }
+    ]
+}
