@@ -16,6 +16,8 @@ import * as jsonToAst from 'json-to-ast';
 import {makeLint, LinterProblem} from './linter';
 import { ExampleConfiguration, Severity, RuleKeys } from './configuration';
 
+const lint = require('yndx-shri-task_2');
+
 let conn = createConnection(ProposedFeatures.all);
 let docs = new TextDocuments();
 let conf: ExampleConfiguration | undefined = undefined; 
@@ -74,7 +76,27 @@ async function validateAll() {
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     const source = basename(textDocument.uri);
     const json = textDocument.getText();
-
+    let diagnostics: Diagnostic[];
+    
+    diagnostics = lint(json).reduce((list: Diagnostic[], problem: LinterError):Diagnostic[]=>{
+        list.push({
+            range: {
+                start: {
+                    line: problem.location.start.line - 1,
+                    character: problem.location.start.column - 1
+                },
+                end: {
+                    line: problem.location.end.line - 1,
+                    character: problem.location.end.column - 1
+                },
+            },
+            severity: DiagnosticSeverity.Error,
+            message: problem.error,
+            source
+        });
+        return list;
+    }, []);
+    
     const validateProperty = (property: jsonToAst.AstProperty): LinterProblem<RuleKeys>[] =>
         /^[A-Z]+$/.test(property.key.value) 
             ? [{ key: RuleKeys.UppercaseNamesIsForbidden, loc: property.key.loc }] 
@@ -83,7 +105,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     const validateObject = (obj: jsonToAst.AstObject): LinterProblem<RuleKeys>[] =>
         obj.children.some(p => p.key.value === 'block') ? [] : [{ key: RuleKeys.BlockNameIsRequired, loc: obj.loc }] ;
         
-    const diagnostics: Diagnostic[] = makeLint(json, validateProperty, validateObject)
+    diagnostics = makeLint(json, validateProperty, validateObject)
         .reduce((list: Diagnostic[], problem: LinterProblem<RuleKeys>): Diagnostic[] => {
             const severity = GetDiagnosticSeverity(problem.key);
 
@@ -104,7 +126,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
             }
 
             return list;
-        }, []);
+        }, diagnostics);
 
     if (diagnostics.length) {
         conn.sendDiagnostics({ uri: textDocument.uri, diagnostics });
