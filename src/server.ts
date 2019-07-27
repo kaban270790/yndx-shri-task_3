@@ -40,6 +40,7 @@ conn.onInitialize((params: InitializeParams) => {
 
 conn.onDidChangeConfiguration(({ settings }: DidChangeConfigurationParams) => {
     conf = settings.example;
+    console.log(conf);
     validateAll();
 });
 
@@ -84,7 +85,11 @@ async function validateAll() {
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     const source = basename(textDocument.uri);
     const json = textDocument.getText();
-    let diagnostics: Diagnostic[];
+    let diagnostics: Diagnostic[] = [];
+    if (conf === undefined || conf.enable === false) {
+        conn.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+        return;
+    }
     
     diagnostics = lint(json).reduce((list: Diagnostic[], problem: LinterError):Diagnostic[]=>{
         list.push({
