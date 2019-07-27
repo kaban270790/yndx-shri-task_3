@@ -40,7 +40,6 @@ conn.onInitialize((params: InitializeParams) => {
 
 conn.onDidChangeConfiguration(({ settings }: DidChangeConfigurationParams) => {
     conf = settings.example;
-    console.log(conf);
     validateAll();
 });
 
