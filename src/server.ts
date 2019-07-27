@@ -116,8 +116,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
             : [];
 
     const validateObject = (obj: jsonToAst.AstObject): LinterProblem<RuleKeys>[] => {
-        if (obj.children.length === 0 || (obj.children.some(p => PROPS_BEM.indexOf(p.key.value) !== -1) && 
-        !obj.children.some(p => p.key.value === PROP_BLOCK))) {
+        if (obj.children.length === 0 || 
+            (obj.children.some(p => PROPS_BEM.indexOf(p.key.value) !== -1) && 
+                !obj.children.some(p => p.key.value === PROP_BLOCK))
+            ) {
             return [{ key: RuleKeys.BlockNameIsRequired, loc: obj.loc }];
         }
         return [];
