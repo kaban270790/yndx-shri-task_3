@@ -37,7 +37,7 @@ declare namespace JsonToAst {
 
     export interface AstObject {
         type: 'Object';
-        children: AstJsonEntity[];
+        children: AstProperty[];
         loc: AstLocation;
     }
 
@@ -62,4 +62,10 @@ declare function JsonToAst(json: string): JsonToAst.AstJsonEntity;
 
 declare module 'json-to-ast' {
     export = JsonToAst;
+}
+
+declare interface LinterError {
+    code: string;
+    error: string;
+    location: JsonToAst.AstLocation;
 }
