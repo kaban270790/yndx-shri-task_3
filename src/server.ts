@@ -22,6 +22,14 @@ let conn = createConnection(ProposedFeatures.all);
 let docs = new TextDocuments();
 let conf: ExampleConfiguration | undefined = undefined; 
 
+const PROP_BLOCK = 'block';
+const PROP_ELEM = 'elem';
+const PROP_CONTENT = 'content';
+const PROP_ELEMMODS = 'elemMods';
+const PROP_MODS = 'mods';
+const PROP_MIX = 'mix';
+const PROPS_BEM = [PROP_BLOCK,PROP_ELEM,PROP_CONTENT,PROP_MODS,PROP_ELEMMODS,PROP_MIX];
+
 conn.onInitialize((params: InitializeParams) => {
     return {
         capabilities: {
@@ -102,8 +110,13 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
             ? [{ key: RuleKeys.UppercaseNamesIsForbidden, loc: property.key.loc }] 
             : [];
 
-    const validateObject = (obj: jsonToAst.AstObject): LinterProblem<RuleKeys>[] =>
-        obj.children.some(p => p.key.value === 'block') ? [] : [{ key: RuleKeys.BlockNameIsRequired, loc: obj.loc }] ;
+    const validateObject = (obj: jsonToAst.AstObject): LinterProblem<RuleKeys>[] => {
+        if (obj.children.length === 0 || (obj.children.some(p => PROPS_BEM.indexOf(p.key.value) !== -1) && 
+        !obj.children.some(p => p.key.value === PROP_BLOCK))) {
+            return [{ key: RuleKeys.BlockNameIsRequired, loc: obj.loc }];
+        }
+        return [];
+    };
         
     diagnostics = makeLint(json, validateProperty, validateObject)
         .reduce((list: Diagnostic[], problem: LinterProblem<RuleKeys>): Diagnostic[] => {
